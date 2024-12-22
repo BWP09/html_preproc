@@ -94,7 +94,7 @@ class HTMLTokenizer:
             elif self.tokens[-1].type_ in [LexTokenType.TAG_OPEN_START, LexTokenType.TAG_CLOSE_START] and char in string.ascii_letters + "!" :
                 self.tokens.append(LexToken(LexTokenType.TAG_NAME, char))
             
-            elif self.tokens[-1].type_ == LexTokenType.TAG_ATTR_NAME and char in string.ascii_letters:
+            elif self.tokens[-1].type_ == LexTokenType.TAG_ATTR_NAME and char in string.ascii_letters + "-_":
                 self.tokens[-1].value += char
             
             elif self.tokens[-1].type_ in [LexTokenType.TAG_NAME, LexTokenType.TAG_ATTR_NAME] and char == " ":
