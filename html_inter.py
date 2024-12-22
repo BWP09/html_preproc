@@ -36,14 +36,10 @@ class LexToken:
 
 class HTMLTokenizer:
     def __init__(self) -> None:
-        self.clear()
-    
-    def clear(self) -> None:
-        self.html = ""
-        self.tokens: list[LexToken] = [LexToken(LexTokenType.SOF)]
+        pass
         
     def tokenize(self, html: str) -> list[LexToken]:
-        self.html = html
+        tokens: list[LexToken] = [LexToken(LexTokenType.SOF)]
 
         def next_factory(text: str):
             def next_(pos: int, amount: int):
@@ -61,82 +57,82 @@ class HTMLTokenizer:
         while cc < len(html):
             char = html[cc]
 
-            if self.tokens[-1].type_ == LexTokenType.COMMENT_START:
-                self.tokens.append(LexToken(LexTokenType.COMMENT_BODY, char))
+            if tokens[-1].type_ == LexTokenType.COMMENT_START:
+                tokens.append(LexToken(LexTokenType.COMMENT_BODY, char))
 
-            elif self.tokens[-1].type_ == LexTokenType.COMMENT_BODY and next_html(cc, 3) == "-->":
-                self.tokens.append(LexToken(LexTokenType.COMMENT_END))
+            elif tokens[-1].type_ == LexTokenType.COMMENT_BODY and next_html(cc, 3) == "-->":
+                tokens.append(LexToken(LexTokenType.COMMENT_END))
                 cc += 2
 
-            elif self.tokens[-1].type_ == LexTokenType.COMMENT_BODY:
-                self.tokens[-1].value += char
+            elif tokens[-1].type_ == LexTokenType.COMMENT_BODY:
+                tokens[-1].value += char
 
             elif next_html(cc, 4) == "<!--":
-                self.tokens.append(LexToken(LexTokenType.COMMENT_START))
+                tokens.append(LexToken(LexTokenType.COMMENT_START))
                 cc += 3
             
             elif next_html(cc, 2) == "</":
-                self.tokens.append(LexToken(LexTokenType.TAG_CLOSE_START))
+                tokens.append(LexToken(LexTokenType.TAG_CLOSE_START))
                 cc += 1
             
-            elif self.tokens[-1].type_ == LexTokenType.CODE:
-                self.tokens[-1].value += char
+            elif tokens[-1].type_ == LexTokenType.CODE:
+                tokens[-1].value += char
             
             elif char == "<":
-                self.tokens.append(LexToken(LexTokenType.TAG_OPEN_START))
+                tokens.append(LexToken(LexTokenType.TAG_OPEN_START))
             
             elif char == ">":
-                self.tokens.append(LexToken(LexTokenType.TAG_END))
+                tokens.append(LexToken(LexTokenType.TAG_END))
             
-            elif self.tokens[-1].type_ == LexTokenType.TAG_NAME and char in string.ascii_letters + string.digits + "!":
-                self.tokens[-1].value += char
+            elif tokens[-1].type_ == LexTokenType.TAG_NAME and char in string.ascii_letters + string.digits + "!":
+                tokens[-1].value += char
             
-            elif self.tokens[-1].type_ in [LexTokenType.TAG_OPEN_START, LexTokenType.TAG_CLOSE_START] and char in string.ascii_letters + "!" :
-                self.tokens.append(LexToken(LexTokenType.TAG_NAME, char))
+            elif tokens[-1].type_ in [LexTokenType.TAG_OPEN_START, LexTokenType.TAG_CLOSE_START] and char in string.ascii_letters + "!" :
+                tokens.append(LexToken(LexTokenType.TAG_NAME, char))
             
-            elif self.tokens[-1].type_ == LexTokenType.TAG_ATTR_NAME and char in string.ascii_letters + "-_":
-                self.tokens[-1].value += char
+            elif tokens[-1].type_ == LexTokenType.TAG_ATTR_NAME and char in string.ascii_letters + "-_":
+                tokens[-1].value += char
             
-            elif self.tokens[-1].type_ in [LexTokenType.TAG_NAME, LexTokenType.TAG_ATTR_NAME] and char == " ":
-                self.tokens.append(LexToken(LexTokenType.TAG_ATTR_NAME))
+            elif tokens[-1].type_ in [LexTokenType.TAG_NAME, LexTokenType.TAG_ATTR_NAME] and char == " ":
+                tokens.append(LexToken(LexTokenType.TAG_ATTR_NAME))
             
-            elif self.tokens[-1].type_ == LexTokenType.TAG_ATTR_VALUE and next_html(cc - 1, 2) == "\" ":
-                self.tokens.append(LexToken(LexTokenType.TAG_ATTR_NAME))
+            elif tokens[-1].type_ == LexTokenType.TAG_ATTR_VALUE and next_html(cc - 1, 2) == "\" ":
+                tokens.append(LexToken(LexTokenType.TAG_ATTR_NAME))
 
-            elif self.tokens[-1].type_ == LexTokenType.TAG_ATTR_NAME and char == "=":
-                self.tokens.append(LexToken(LexTokenType.TAG_ATTR_EQUALS))
+            elif tokens[-1].type_ == LexTokenType.TAG_ATTR_NAME and char == "=":
+                tokens.append(LexToken(LexTokenType.TAG_ATTR_EQUALS))
 
-            elif self.tokens[-1].type_ == LexTokenType.TAG_ATTR_VALUE and char in string.ascii_letters + string.digits + string.punctuation + " ":
+            elif tokens[-1].type_ == LexTokenType.TAG_ATTR_VALUE and char in string.ascii_letters + string.digits + string.punctuation + " ":
                 if char != "\"":
-                    self.tokens[-1].value += char
+                    tokens[-1].value += char
             
-            elif self.tokens[-1].type_ == LexTokenType.TAG_ATTR_EQUALS and char == "\"":
-                self.tokens.append(LexToken(LexTokenType.TAG_ATTR_VALUE))
+            elif tokens[-1].type_ == LexTokenType.TAG_ATTR_EQUALS and char == "\"":
+                tokens.append(LexToken(LexTokenType.TAG_ATTR_VALUE))
 
-            elif len(self.tokens) >= 3 and self.tokens[-3].type_ == LexTokenType.TAG_OPEN_START \
-                and (t := self.tokens[-2]).type_ == LexTokenType.TAG_NAME and t.value in ["script", "style"]:
-                self.tokens.append(LexToken(LexTokenType.CODE, char))
+            elif len(tokens) >= 3 and tokens[-3].type_ == LexTokenType.TAG_OPEN_START \
+                and (t := tokens[-2]).type_ == LexTokenType.TAG_NAME and t.value in ["script", "style"]:
+                tokens.append(LexToken(LexTokenType.CODE, char))
 
             elif char == "\n":
-                self.tokens.append(LexToken(LexTokenType.NEWLINE))
+                tokens.append(LexToken(LexTokenType.NEWLINE))
 
-            elif self.tokens[-1].type_ == LexTokenType.CONTENT:
-                self.tokens[-1].value += char
+            elif tokens[-1].type_ == LexTokenType.CONTENT:
+                tokens[-1].value += char
             
-            elif self.tokens[-1].type_ in [LexTokenType.TAG_END, LexTokenType.NEWLINE, LexTokenType.INDENT] and char != " ":
-                self.tokens.append(LexToken(LexTokenType.CONTENT, char))
+            elif tokens[-1].type_ in [LexTokenType.SOF, LexTokenType.TAG_END, LexTokenType.NEWLINE, LexTokenType.INDENT] and char != " ":
+                tokens.append(LexToken(LexTokenType.CONTENT, char))
             
-            elif self.tokens[-1].type_ == LexTokenType.INDENT and char == " ":
-                self.tokens[-1].value = str(int(self.tokens[-1].value) + 1)
+            elif tokens[-1].type_ == LexTokenType.INDENT and char == " ":
+                tokens[-1].value = str(int(tokens[-1].value) + 1)
                 
             elif char == " ":
-                self.tokens.append(LexToken(LexTokenType.INDENT, "1"))
+                tokens.append(LexToken(LexTokenType.INDENT, "1"))
 
             cc += 1
 
-        self.tokens.append(LexToken(LexTokenType.EOF))
+        tokens.append(LexToken(LexTokenType.EOF))
 
-        return self.tokens
+        return tokens
 
 UNPAIRED_TAGS: list[str] = [
     "!DOCTYPE",
@@ -238,11 +234,7 @@ class HTML_AST_Builder:
 
 class HTMLBuilder:
     def __init__(self) -> None:
-        self.clear()
-    
-    def clear(self) -> None:
-        self.tokens = []
-        self.html = ""
+        pass
 
     def build(self, ast_root_token: AST_Token, indent_spaces: int = 4) -> str:
         html = ""
