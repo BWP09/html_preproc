@@ -14,7 +14,7 @@ class CircularDependency(Exception):
     ...
 
 class HTML_Preprocessor:
-    def __init__(self, preproc_dir: str, make_dirs: bool = True, file_cache: bool = True, live_reload: bool = False, start_seq: str = "#[", end_seq: str = "]") -> None:
+    def __init__(self, preproc_dir: str, make_dirs: bool = True, file_cache: bool = True, live_reload: bool = False, start_seq: str = "#[", end_seq: str = "]", indent_spaces: int = 4) -> None:
         self._preproc_dir = preproc_dir
         self._templates_dir = f"{preproc_dir}/templates"
         self._components_dir = f"{preproc_dir}/components"
@@ -26,6 +26,8 @@ class HTML_Preprocessor:
 
         self._start_seq = start_seq
         self._end_seq = end_seq
+
+        self._indent_spaces = indent_spaces
 
         if make_dirs:
             util.mkdir(self._templates_dir)
@@ -123,7 +125,7 @@ class HTML_Preprocessor:
         print(ast_root.tree())
         
         builder = html_inter.HTMLBuilder()
-        template_text_processed = builder.build(ast_root)
+        template_text_processed = builder.build(ast_root, indent_spaces = self._indent_spaces)
 
         if self._file_cache:
             with open(cache_path, "w", encoding = "utf-8") as f:
