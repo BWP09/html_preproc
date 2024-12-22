@@ -61,11 +61,7 @@ class HTMLTokenizer:
         while cc < len(html):
             char = html[cc]
 
-            if len(self.tokens) >= 3 and self.tokens[-3].type_ == LexTokenType.TAG_OPEN_START \
-                and (t := self.tokens[-2]).type_ == LexTokenType.TAG_NAME and t.value in ["script", "style"]:
-                self.tokens.append(LexToken(LexTokenType.CODE, char))
-
-            elif self.tokens[-1].type_ == LexTokenType.COMMENT_START:
+            if self.tokens[-1].type_ == LexTokenType.COMMENT_START:
                 self.tokens.append(LexToken(LexTokenType.COMMENT_BODY, char))
 
             elif self.tokens[-1].type_ == LexTokenType.COMMENT_BODY and next_html(cc, 3) == "-->":
@@ -116,6 +112,10 @@ class HTMLTokenizer:
             
             elif self.tokens[-1].type_ == LexTokenType.TAG_ATTR_EQUALS and char == "\"":
                 self.tokens.append(LexToken(LexTokenType.TAG_ATTR_VALUE))
+
+            elif len(self.tokens) >= 3 and self.tokens[-3].type_ == LexTokenType.TAG_OPEN_START \
+                and (t := self.tokens[-2]).type_ == LexTokenType.TAG_NAME and t.value in ["script", "style"]:
+                self.tokens.append(LexToken(LexTokenType.CODE, char))
 
             elif char == "\n":
                 self.tokens.append(LexToken(LexTokenType.NEWLINE))
@@ -213,9 +213,14 @@ class HTML_AST_Builder:
                     path.pop()
 
                 case LexTokenType.TAG_ATTR_NAME:
-                    path[-1].attrs.append((token.value, lex_tokens[i + 2].value))
+                    if lex_tokens[i + 2].type_ == LexTokenType.TAG_ATTR_VALUE:
+                        path[-1].attrs.append((token.value, lex_tokens[i + 2].value))
 
-                    i += 2
+                        i += 2
+                    
+                    else:
+                        path[-1].attrs.append((token.value, ""))
+
 
                 case LexTokenType.CONTENT:
                     path[-1].children.append(AST_Token(name = "<DATA>", data = token.value))
