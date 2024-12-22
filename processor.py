@@ -77,9 +77,6 @@ class HTML_Preprocessor:
         lexer = html_inter.HTMLTokenizer()
         tokens = lexer.tokenize(template_text)
 
-        for token in tokens:
-            print(token)
-
         i = 0
         while i < len(tokens):
             token = tokens[i]
@@ -121,9 +118,6 @@ class HTML_Preprocessor:
         ast_builder = html_inter.HTML_AST_Builder()
         ast_root = ast_builder.build(tokens)
 
-        print(ast_root)
-        print(ast_root.tree())
-        
         builder = html_inter.HTMLBuilder()
         template_text_processed = builder.build(ast_root, indent_spaces = self._indent_spaces)
 
